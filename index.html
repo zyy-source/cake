@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+  <meta charset="UTF-8" />
+  <title>生日蛋糕</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <style>
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+      color: #fff;
+      width: 100vw;
+      height: 100vh;
+      touch-action: none;
+    }
+    
+    #title {
+      position: fixed;
+      top: 20px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+      z-index: 10;
+      padding: 0 20px;
+      pointer-events: none;
+    }
+    
+    #instructions {
+      position: fixed;
+      top: 70px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: clamp(0.8rem, 2vw, 1rem);
+      color: rgba(255, 255, 255, 0.85);
+      z-index: 10;
+      padding: 0 20px;
+      pointer-events: none;
+    }
+    
+    #mobileInstructions {
+      position: fixed;
+      top: 100px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: clamp(0.7rem, 2vw, 0.9rem);
+      color: rgba(255, 255, 255, 0.7);
+      z-index: 10;
+      padding: 0 20px;
+      pointer-events: none;
+    }
+    
+    #controls {
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      z-index: 10;
+      padding: 0 20px;
+      flex-wrap: wrap;
+    }
+    
+    .control-btn {
+      padding: 12px 25px;
+      font-size: 16px;
+      border-radius: 50px;
+      border: none;
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+      font-weight: bold;
+      min-width: 140px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .control-btn:hover, .control-btn:active {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(79, 172, 254, 0.6);
+    }
+    
+    #birthdayMessage {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      color: #ffd700;
+      text-align: center;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 20;
+      transition: opacity 1s ease;
+      width: 90%;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      line-height: 1.3;
+    }
+    
+    .loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5rem;
+      color: #ffd700;
+      z-index: 100;
+    }
+    
+    canvas {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      touch-action: none;
+    }
+    
+    .floating-text {
+      position: fixed;
+      top: 140px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.7);
+      z-index: 10;
+      pointer-events: none;
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+    
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      pointer-events: none;
+      z-index: 5;
+    }
+    
+    .mic-status {
+      position: fixed;
+      bottom: 100px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #4CAF50;
+      z-index: 10;
+      opacity: 0.8;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    
+    .mic-status.blowing {
+      color: #ff6b6b;
+      animation: pulse 0.5s infinite alternate;
+    }
+    
+    @keyframes pulse {
+      from { opacity: 0.6; }
+      to { opacity: 1; }
+    }
+    
+    .touch-controls {
+    display: none !important;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+      pointer-events: none;
+    }
+  
+    .touch-joystick {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      bottom: 100px;
+      left: 30px;
+      pointer-events: auto;
+    }
+    
+    .touch-joystick-base {
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      position: absolute;
+    }
+    
+    .touch-joystick-handle {
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 215, 0, 0.7);
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    .touch-zoom {
+      position: absolute;
+      width: 60px;
+      height: 120px;
+      bottom: 100px;
+      right: 30px;
+      pointer-events: auto;
+    }
+    
+    .zoom-btn {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      margin-bottom: 10px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .permission-prompt {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .permission-content {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 20px;
+      max-width: 400px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .permission-content h2 {
+      color: #ffd700;
+      margin-bottom: 15px;
+    }
+    
+    .permission-content p {
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    
+    .permission-btn {
+      padding: 12px 30px;
+      font-size: 16px;
+      border-radius: 50px;
+      border: none;
+      background: linear-gradient(135deg, #4CAF50, #8BC34A);
+      color: white;
+      cursor: pointer;
+      margin: 5px;
+      width: 100%;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    .star {
+      position: absolute;
+      background-color: white;
+      border-radius: 50%;
+      animation: twinkle 3s infinite;
+    }
+    
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+    
+    .auto-hide {
+      animation: fadeOut 5s forwards 3s;
+    }
+    
+    @keyframes fadeOut {
+      to { opacity: 0; }
+    }
+    
+    @media (max-width: 768px) {
+      .control-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        min-width: 120px;
+      }
+      
+      #title {
+        font-size: 1.5rem;
+        top: 10px;
+      }
+      
+      #instructions {
+        font-size: 0.8rem;
+        top: 50px;
+      }
+      
+      #mobileInstructions {
+        font-size: 0.7rem;
+        top: 80px;
+      }
+      
+      .floating-text {
+        top: 120px;
+        font-size: 0.9rem;
+      }
+      
+      .touch-joystick {
+        width: 100px;
+        height: 100px;
+        left: 20px;
+        bottom: 90px;
+      }
+      
+      .touch-zoom {
+        right: 20px;
+        bottom: 90px;
+      }
+      
+      .zoom-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+      }
+      
+      .mic-status {
+        bottom: 80px;
+        font-size: 0.8rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .control-btn {
+        padding: 8px 15px;
+        font-size: 12px;
+        min-width: 100px;
+      }
+      
+      .floating-text {
+        top: 110px;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<audio id="blowSound" preload="auto" style="display: none;">
+  <!-- 这里需要替换为您实际的音效文件路径 -->
+<source src="blow-sound.mp3" type="audio/mpeg">
+<source src="blow-sound.ogg" type="audio/ogg">
+</audio>
+
+<div class="stars" id="stars"></div>
+<div id="loading" class="loading">🎂 加载中...</div>
+
+<div id="permissionPrompt" class="permission-prompt" style="display: none;">
+  <div class="permission-content">
+    <h2>🎂  生日快乐！ 🎂</h2>
+    <p>许个愿，对着麦克风吹气来吹灭蜡烛吧！</p>
+    <p>请允许麦克风访问以使用吹气功能。</p>
+    <button id="allowMic" class="permission-btn">🎤 允许麦克风访问</button>
+    <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.7;">（不启用麦克风也可以观看蛋糕）</p>
+  </div>
+</div>
+
+<h1 id="title">🎂 生日快乐 🎂</h1>
+<div class="floating-text">许个愿，吹灭蜡烛吧！</div>
+<div id="birthdayMessage">🎉 生日快乐！ 🎉</div>
+
+<div class="mic-status" id="micStatus">🎤 正在检测吹气...</div>
+
+<div id="controls">
+  <button id="relightBtn" class="control-btn">🔥 重新点燃</button>
+</div>
+
+<div class="touch-controls">
+  <div class="touch-joystick" id="joystick" style="display: none;">
+    <div class="touch-joystick-base"></div>
+    <div class="touch-joystick-handle"></div>
+  </div>
+  <div class="touch-zoom" id="touchZoom" style="display: none;">
+    <div class="zoom-btn" id="zoomIn">+</div>
+    <div class="zoom-btn" id="zoomOut">-</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 创建星空背景
+  createStars();
+  
+  // 初始化变量
+  let scene, camera, renderer;
+  let cakeGroup, flames = [];
+  let confettiActive = false;
+  let confettiParticles = [];
+  let birthdayTextMeshes = [];
+  let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  let audioContext, analyser, microphone, dataArray, isMicActive = false;
+  let blowIntensity = 0;
+  let lastBlowTime = 0;
+  let isTouchJoystickActive = false;
+  let joystickStartPos = { x: 0, y: 0 };
+  let joystickCurrentPos = { x: 0, y: 0 };
+  let cakeRotationSpeed = { x: 0, y: 0 };
+  let micPermissionRequested = false;
+  let smokeParticles = [];
+  let flameTextures = [];
+  let clock = new THREE.Clock();
+  let originalCameraPosition = null;
+  let originalCameraRotation = null;
+  
+  // 初始化
+  function init() {
+    try {
+      // 1. 创建场景
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0a0a1a);
+      scene.fog = new THREE.Fog(0x0a0a1a, 10, 30);
+      
+      // 2. 创建相机
+      camera = new THREE.PerspectiveCamera(
+        60,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      camera.position.set(0, 8, 20);
+      originalCameraPosition = camera.position.clone();
+      originalCameraRotation = camera.rotation.clone();
+      
+      // 3. 创建渲染器
+      renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        alpha: true
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      document.body.appendChild(renderer.domElement);
+      
+      // 4. 创建火焰纹理
+      createFlameTextures();
+      
+      // 5. 添加光照
+      addLights();
+      
+      // 6. 创建蛋糕
+      createCake();
+      
+      // 7. 隐藏加载提示
+      document.getElementById('loading').style.display = 'none';
+      
+      // 8. 开始动画
+      animate();
+      
+      // 9. 添加事件监听
+      setupEventListeners();
+      
+      // 10. 自动请求麦克风权限
+      setTimeout(() => {
+        requestMicrophonePermission();
+      }, 1500);
+      
+    } catch (error) {
+      console.error("初始化错误:", error);
+      document.getElementById('loading').textContent = '加载失败，请刷新页面';
+    }
+  }
+  
+  // 创建火焰纹理
+  function createFlameTextures() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    
+    // 创建多个火焰纹理帧
+    for (let i = 0; i < 4; i++) {
+      ctx.clearRect(0, 0, 64, 64);
+      
+      // 创建径向渐变
+      const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      
+      // 根据帧数创建不同的火焰颜色
+      if (i === 0) {
+        gradient.addColorStop(0, 'rgba(255, 255, 200, 1)');
+        gradient.addColorStop(0.3, 'rgba(255, 200, 100, 0.8)');
+        gradient.addColorStop(0.6, 'rgba(255, 100, 0, 0.6)');
+        gradient.addColorStop(1, 'rgba(255, 50, 0, 0)');
+      } else if (i === 1) {
+        gradient.addColorStop(0, 'rgba(255, 240, 180, 1)');
+        gradient.addColorStop(0.3, 'rgba(255, 180, 80, 0.8)');
+        gradient.addColorStop(0.6, 'rgba(255, 80, 0, 0.6)');
+        gradient.addColorStop(1, 'rgba(255, 30, 0, 0)');
+      } else if (i === 2) {
+        gradient.addColorStop(0, 'rgba(255, 230, 160, 1)');
+        gradient.addColorStop(0.3, 'rgba(255, 160, 60, 0.8)');
+        gradient.addColorStop(0.6, 'rgba(255, 60, 0, 0.6)');
+        gradient.addColorStop(1, 'rgba(255, 20, 0, 0)');
+      } else {
+        gradient.addColorStop(0, 'rgba(255, 220, 140, 1)');
+        gradient.addColorStop(0.3, 'rgba(255, 140, 40, 0.8)');
+        gradient.addColorStop(0.6, 'rgba(255, 40, 0, 0.6)');
+        gradient.addColorStop(1, 'rgba(255, 10, 0, 0)');
+      }
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 64, 64);
+      
+      // 添加一些噪点
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      for (let j = 0; j < 20; j++) {
+        const x = Math.random() * 64;
+        const y = Math.random() * 64;
+        const radius = Math.random() * 3;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+      flameTextures.push(texture);
+    }
+  }
+  
+  // 创建星空背景
+  function createStars() {
+    const starsContainer = document.getElementById('stars');
+    const starCount = 150;
+    
+    for (let i = 0; i < starCount; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      
+      const size = Math.random() * 3 + 1;
+      star.style.width = size + 'px';
+      star.style.height = size + 'px';
+      
+      star.style.left = Math.random() * 100 + '%';
+      star.style.top = Math.random() * 100 + '%';
+      
+      star.style.animationDelay = Math.random() * 3 + 's';
+      star.style.opacity = Math.random() * 0.7 + 0.3;
+      
+      starsContainer.appendChild(star);
+    }
+  }
+  
+  // 添加光照
+  function addLights() {
+    // 环境光
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    
+    // 主方向光
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(10, 20, 5);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.camera.left = -10;
+      directionalLight.shadow.camera.right = 10;
+      directionalLight.shadow.camera.top = 10;
+      directionalLight.shadow.camera.bottom = -10;
+    scene.add(directionalLight);
+    
+    // 蛋糕周围的点光源
+    const pointLight = new THREE.PointLight(0xffaa88, 0.5, 100);
+    pointLight.position.set(0, 10, 5);
+    scene.add(pointLight);
+    
+    // 蜡烛周围的点光源
+    const candleLight = new THREE.PointLight(0xffaa00, 0.3, 20);
+    candleLight.position.set(0, 8, 0);
+    scene.add(candleLight);
+  }
+  
+  // 创建蛋糕
+  function createCake() {
+    cakeGroup = new THREE.Group();
+    scene.add(cakeGroup);
+    
+    // 蛋糕位置
+    cakeGroup.position.y = 1;
+    
+    // 创建精美的蛋糕盘
+    const plateGeometry = new THREE.CylinderGeometry(6, 6.2, 0.4, 32);
+    const plateMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xf8f8f8,
+      metalness: 0.6,
+      roughness: 0.1
+    });
+    const plate = new THREE.Mesh(plateGeometry, plateMaterial);
+    plate.position.y = 0;
+    plate.receiveShadow = true;
+    cakeGroup.add(plate);
+    
+    // 盘子金色装饰花纹
+    const patternGeometry = new THREE.TorusGeometry(6.3, 0.08, 8, 48);
+    const patternMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xffd700,
+      metalness: 0.9,
+      roughness: 0.1
+    });
+    const pattern = new THREE.Mesh(patternGeometry, patternMaterial);
+    pattern.position.y = 0.2;
+    pattern.rotation.x = Math.PI / 2;
+    cakeGroup.add(pattern);
+    
+    // 盘子内边缘装饰
+    const innerEdgeGeometry = new THREE.TorusGeometry(5.8, 0.05, 8, 48);
+    const innerEdgeMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xffd700,
+      metalness: 0.9,
+      roughness: 0.1
+    });
+    const innerEdge = new THREE.Mesh(innerEdgeGeometry, innerEdgeMaterial);
+    innerEdge.position.y = 0.1;
+    innerEdge.rotation.x = Math.PI / 2;
+    cakeGroup.add(innerEdge);
+    
+    // 创建6层渐变蛋糕
+    const layers = [
+      { radius: 5.2, height: 1.6, y: 0.2, color: 0xffb6c1, decoration: 0xff9999 },
+      { radius: 4.4, height: 1.5, y: 1.8, color: 0xff99aa, decoration: 0xff8888 },
+      { radius: 3.6, height: 1.4, y: 3.3, color: 0xff7f94, decoration: 0xff7777 },
+      { radius: 2.8, height: 1.3, y: 4.7, color: 0xff6680, decoration: 0xff6666 },
+      { radius: 2.0, height: 1.2, y: 6.0, color: 0xff4d6d, decoration: 0xff5555 },
+      { radius: 1.4, height: 1.1, y: 7.2, color: 0xff3366, decoration: 0xff4444 }
+    ];
+    
+    // 在每层蛋糕上添加生日祝福文字
+    const birthdayText = "🎂生日快乐🎂";
+    const textColors = [0xffd700, 0xffffff, 0xffd700, 0xffffff, 0xffd700, 0xffffff];
+    
+    layers.forEach((layer, index) => {
+      // 蛋糕主体
+      const geometry = new THREE.CylinderGeometry(layer.radius, layer.radius, layer.height, 32);
+      const material = new THREE.MeshStandardMaterial({ 
+        color: layer.color,
+        roughness: 0.4,
+        metalness: 0.2
+      });
+      const layerMesh = new THREE.Mesh(geometry, material);
+      layerMesh.position.y = layer.y;
+      layerMesh.castShadow = true;
+      layerMesh.receiveShadow = true;
+      cakeGroup.add(layerMesh);
+      
+      // 添加蛋糕纹理细节
+      addCakeTexture(layerMesh, layer.radius, layer.height, layer.y, layer.color);
+      
+      // 在每层蛋糕表面创建文字
+      createTextOnCakeLayer(layer.radius, layer.height, layer.y, birthdayText, textColors[index]);
+      
+      // 每层顶部的奶油装饰
+      const creamGeometry = new THREE.TorusGeometry(layer.radius, 0.15, 12, 48);
+      const creamMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xffffff,
+        roughness: 0.1,
+        metalness: 0.1
+      });
+      const cream = new THREE.Mesh(creamGeometry, creamMaterial);
+      cream.position.y = layer.y + layer.height / 2;
+      cream.rotation.x = Math.PI / 2;
+      cakeGroup.add(cream);
+      
+    
+      
+      // 在奶油上添加彩色糖珠
+      for (let i = 0; i < 20; i++) {
+        const angle = (i / 20) * Math.PI * 2;
+        const sugarGeometry = new THREE.SphereGeometry(0.1, 12, 12);
+        const colors = [0xff4444, 0x44ff44, 0x4444ff, 0xffff44, 0xff44ff, 0x00ffff];
+        const sugarMaterial = new THREE.MeshStandardMaterial({ 
+          color: colors[Math.floor(Math.random() * colors.length)],
+          roughness: 0.3,
+          metalness: 0.2
+        });
+        const sugar = new THREE.Mesh(sugarGeometry, sugarMaterial);
+        sugar.position.set(
+          Math.cos(angle) * (layer.radius - 0.1),
+          layer.y + layer.height / 2 + 0.12,
+          Math.sin(angle) * (layer.radius - 0.1)
+        );
+        cakeGroup.add(sugar);
+      }
+      
+      // 在蛋糕侧面添加装饰条纹
+      addLayerStripes(layer.radius, layer.height, layer.y, layer.decoration);
+    });
+    
+    // 创建蛋糕顶层（半球形）
+    const topGeometry = new THREE.SphereGeometry(1.6, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+    const topMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xff3366,
+      roughness: 0.3,
+      metalness: 0.1
+    });
+    const top = new THREE.Mesh(topGeometry, topMaterial);
+    top.position.y = 7.8;
+    top.rotation.x = Math.PI;
+    cakeGroup.add(top);
+    
+    // 顶层添加奶油花边
+    const topCreamGeometry = new THREE.TorusGeometry(1.7, 0.12, 8, 32);
+    const topCreamMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xffffff,
+      roughness: 0.1
+    });
+    const topCream = new THREE.Mesh(topCreamGeometry, topCreamMaterial);
+    topCream.position.y = 7.85;
+    topCream.rotation.x = Math.PI / 2;
+    cakeGroup.add(topCream);
+    
+    // 在蛋糕顶层添加文字
+    createTextOnTop(top.position.y + 0.4, birthdayText);
+    
+    // 在顶层添加大糖珠
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const pearlGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+      const colors = [0xffd700, 0xffffff, 0xff4444, 0x00ff00];
+      const pearlMaterial = new THREE.MeshStandardMaterial({ 
+        color: colors[i % colors.length],
+        roughness: 0.2,
+        metalness: 0.8
+      });
+      const pearl = new THREE.Mesh(pearlGeometry, pearlMaterial);
+      pearl.position.set(
+        Math.cos(angle) * 1.4,
+        7.9,
+        Math.sin(angle) * 1.4
+      );
+      cakeGroup.add(pearl);
+    }
+    
+    // 创建蜡烛
+    createCandles();
+  }
+  
+  // 添加蛋糕纹理细节
+  function addCakeTexture(layerMesh, radius, height, yPos, baseColor) {
+    const textureGroup = new THREE.Group();
+    
+    // 添加随机分布的装饰点
+    for (let i = 0; i < 30; i++) {
+      const decorationGeometry = new THREE.SphereGeometry(0.05, 6, 6);
+      const decorationMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xffffff,
+        roughness: 0.4
+      });
+      const decoration = new THREE.Mesh(decorationGeometry, decorationMaterial);
+      
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * (radius - 0.3);
+      decoration.position.set(
+        Math.cos(angle) * distance,
+        (Math.random() - 0.5) * height * 0.8,
+        Math.sin(angle) * distance
+      );
+      
+      layerMesh.add(decoration);
+    }
+  }
+  
+
+  
+  // 添加蛋糕层装饰条纹
+  function addLayerStripes(radius, height, yPos, stripeColor) {
+    const stripeGroup = new THREE.Group();
+    
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      
+      const stripeGeometry = new THREE.BoxGeometry(0.1, height * 0.7, 0.1);
+      const stripeMaterial = new THREE.MeshStandardMaterial({ 
+        color: stripeColor,
+        roughness: 0.5,
+        metalness: 0.2
+      });
+      
+      const stripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
+      
+      const x = Math.cos(angle) * (radius - 0.15);
+      const z = Math.sin(angle) * (radius - 0.15);
+      
+      stripe.position.set(x, yPos, z);
+      stripe.lookAt(0, yPos, 0);
+      
+      stripeGroup.add(stripe);
+    }
+    
+    cakeGroup.add(stripeGroup);
+  }
+  
+  // 在每层蛋糕表面创建文字
+  function createTextOnCakeLayer(radius, height, yPos, text, textColor) {
+    const textGroup = new THREE.Group();
+    const charCount = text.length;
+    const angleStep = (Math.PI * 2) / charCount;
+    const textSize = 0.4;
+    
+    for (let i = 0; i < charCount; i++) {
+      const char = text[i];
+      const angle = i * angleStep;
+      
+      const geometry = new THREE.BoxGeometry(textSize, textSize * 0.7, 0.1);
+      const material = new THREE.MeshPhongMaterial({ 
+        color: textColor,
+        specular: 0xffffff,
+        shininess: 100,
+        emissive: textColor,
+        emissiveIntensity: 0.2
+      });
+      const charMesh = new THREE.Mesh(geometry, material);
+      
+      const x = Math.cos(angle) * (radius - 0.3);
+      const z = Math.sin(angle) * (radius - 0.3);
+      charMesh.position.set(x, yPos, z);
+      
+      charMesh.lookAt(x * 2, yPos, z * 2);
+      
+      addCharDecoration(charMesh, char, textColor);
+      
+      textGroup.add(charMesh);
+      birthdayTextMeshes.push(charMesh);
+    }
+    
+    cakeGroup.add(textGroup);
+  }
+  
+  // 在蛋糕顶层创建文字
+  function createTextOnTop(yPos, text) {
+    const textGroup = new THREE.Group();
+    const charCount = text.length;
+    const angleStep = (Math.PI * 2) / charCount;
+    const textSize = 0.3;
+    const radius = 1.5;
+    
+    for (let i = 0; i < charCount; i++) {
+      const char = text[i];
+      const angle = i * angleStep;
+      
+      const geometry = new THREE.CylinderGeometry(textSize/2, textSize/2, textSize, 6);
+      const material = new THREE.MeshPhongMaterial({ 
+        color: 0xffd700,
+        specular: 0xffffff,
+        shininess: 100,
+        emissive: 0xffd700,
+        emissiveIntensity: 0.5
+      });
+      const charMesh = new THREE.Mesh(geometry, material);
+      
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      charMesh.position.set(x, yPos, z);
+      
+      charMesh.rotation.x = Math.PI / 6;
+      charMesh.rotation.y = angle;
+      
+      addCharDecoration(charMesh, char, 0xffd700);
+      
+      textGroup.add(charMesh);
+      birthdayTextMeshes.push(charMesh);
+    }
+    
+    cakeGroup.add(textGroup);
+  }
+  
+  // 添加字符装饰
+  function addCharDecoration(charMesh, char, baseColor) {
+    const decorationCount = Math.floor(Math.random() * 3) + 2;
+    
+    for (let i = 0; i < decorationCount; i++) {
+      const geometry = new THREE.SphereGeometry(0.05, 6, 6);
+      const colors = [0xff4444, 0x44ff44, 0x4444ff, 0xffff44, 0xff44ff];
+      const material = new THREE.MeshPhongMaterial({ 
+        color: colors[Math.floor(Math.random() * colors.length)],
+        emissive: baseColor,
+        emissiveIntensity: 0.2
+      });
+      const decoration = new THREE.Mesh(geometry, material);
+      
+      decoration.position.set(
+        (Math.random() - 0.5) * 0.4,
+        (Math.random() - 0.5) * 0.4 + 0.2,
+        (Math.random() - 0.5) * 0.4
+      );
+      
+      charMesh.add(decoration);
+    }
+  }
+  
+  // 创建蜡烛
+  function createCandles() {
+    const candleCount = 24;
+    
+    for (let i = 0; i < candleCount; i++) {
+      const angle = (i / candleCount) * Math.PI * 2;
+      const radius = 1.8;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      
+      const candleGroup = new THREE.Group();
+      
+      // 蜡烛主体
+      const candleGeometry = new THREE.CylinderGeometry(0.12, 0.14, 1.4, 12);
+      const candleMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xffffff,
+        roughness: 0.2,
+        metalness: 0.1
+      });
+      const candle = new THREE.Mesh(candleGeometry, candleMaterial);
+      candle.position.y = 0.7;
+      candleGroup.add(candle);
+      
+      // 添加蜡烛条纹
+      const candleStripes = new THREE.Group();
+      for (let j = 0; j < 3; j++) {
+        const stripeGeometry = new THREE.TorusGeometry(0.12, 0.02, 8, 12);
+        const stripeMaterial = new THREE.MeshStandardMaterial({ 
+          color: 0xffd700,
+          roughness: 0.3,
+          metalness: 0.7
+        });
+        const stripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
+        stripe.position.y = (j - 1) * 0.4;
+        candleStripes.add(stripe);
+      }
+      candleGroup.add(candleStripes);
+      
+      // 烛芯
+      const wickGeometry = new THREE.CylinderGeometry(0.025, 0.025, 0.25, 6);
+      const wickMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x111111,
+        roughness: 0.8
+      });
+      const wick = new THREE.Mesh(wickGeometry, wickMaterial);
+      wick.position.y = 1.4;
+      candleGroup.add(wick);
+      
+      // 烛焰粒子系统
+      const flameGroup = new THREE.Group();
+      
+      // 主火焰
+      const flameMaterial = new THREE.MeshBasicMaterial({
+        map: flameTextures[0],
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      
+      const flameGeometry = new THREE.ConeGeometry(0.15, 0.7, 8);
+      flameGeometry.translate(0, 0.35, 0);
+      const flame = new THREE.Mesh(flameGeometry, flameMaterial);
+      flame.position.y = 1.5;
+      flameGroup.add(flame);
+      
+      // 内焰
+      const innerFlameMaterial = new THREE.MeshBasicMaterial({
+        map: flameTextures[1],
+        transparent: true,
+        opacity: 0.7,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      
+      const innerFlame = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.5, 8), innerFlameMaterial);
+      innerFlame.position.y = 1.5;
+      flameGroup.add(innerFlame);
+      
+      // 烛光
+      const flameLight = new THREE.PointLight(0xffaa00, 1.5, 4);
+      flameLight.position.y = 1.5;
+      flameGroup.add(flameLight);
+      
+      // 烛光闪烁
+      const flickerLight = new THREE.PointLight(0xff6600, 0.8, 3);
+      flickerLight.position.y = 1.7;
+      flameGroup.add(flickerLight);
+      
+      // 蜡烛底座
+      const baseGeometry = new THREE.CylinderGeometry(0.16, 0.12, 0.2, 12);
+      const baseMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xffd700,
+        roughness: 0.3,
+        metalness: 0.8
+      });
+      const candleBase = new THREE.Mesh(baseGeometry, baseMaterial);
+      candleBase.position.y = 0;
+      candleGroup.add(candleBase);
+      
+      candleGroup.add(flameGroup);
+      
+      flames.push({
+        flameGroup: flameGroup,
+        flame: flame,
+        innerFlame: innerFlame,
+        light: flameLight,
+        flickerLight: flickerLight,
+        lit: true,
+        flameIndex: 0,
+        timeOffset: Math.random() * 100,
+        smokeTime: 0
+      });
+      
+      candleGroup.position.set(x, 7.9, z);
+      cakeGroup.add(candleGroup);
+    }
+  }
+  
+  // 创建烟雾粒子
+  function createSmokeParticle(x, y, z) {
+    const smokeGeometry = new THREE.SphereGeometry(0.02, 8, 8);
+    const smokeMaterial = new THREE.MeshBasicMaterial({
+      color: 0x666666,
+      transparent: true,
+      opacity: 0.6
+    });
+    
+    const smoke = new THREE.Mesh(smokeGeometry, smokeMaterial);
+    smoke.position.set(x, y, z);
+    smoke.userData = {
+      velocity: new THREE.Vector3(
+        (Math.random() - 0.5) * 0.02,
+        Math.random() * 0.05 + 0.02,
+        (Math.random() - 0.5) * 0.02
+      ),
+      life: 1.0,
+      scale: Math.random() * 0.5 + 0.5
+    };
+    
+    scene.add(smoke);
+    smokeParticles.push(smoke);
+    return smoke;
+  }
+  
+  // 事件监听
+  function setupEventListeners() {
+    // 重新点燃按钮
+    document.getElementById("relightBtn").addEventListener("click", relightCandles);
+    
+    // 窗口大小调整
+    window.addEventListener("resize", function() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+    
+    // 键盘快捷键
+    document.addEventListener("keydown", function(e) {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        blowOutCandles();
+      } else if (e.key === 'r' || e.key === 'R') {
+        relightCandles();
+      } 
+    });
+    
+    // 移动端触摸控制
+    if (isMobile) {
+      setupMobileControls();
+    } else {
+      // 桌面端鼠标控制
+      setupDesktopControls();
+    }
+  }
+  
+ 
+  // 设置桌面端控制
+  function setupDesktopControls() {
+    let isMouseDown = false;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+    
+    renderer.domElement.addEventListener('mousedown', function(e) {
+      isMouseDown = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    });
+    
+    document.addEventListener('mouseup', function() {
+      isMouseDown = false;
+    });
+    
+    document.addEventListener('mousemove', function(e) {
+      if (!isMouseDown) return;
+      
+      const deltaX = e.clientX - lastMouseX;
+      const deltaY = e.clientY - lastMouseY;
+      
+      cakeGroup.rotation.y += deltaX * 0.01;
+      cakeGroup.rotation.x += deltaY * 0.005;
+      cakeGroup.rotation.x = Math.max(-Math.PI/3, Math.min(Math.PI/3, cakeGroup.rotation.x));
+      
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    });
+    
+    // 鼠标滚轮缩放
+    renderer.domElement.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      camera.position.z += e.deltaY * 0.01;
+      camera.position.z = Math.max(5, Math.min(30, camera.position.z));
+    });
+  }
+  
+  // 设置移动端控制
+  function setupMobileControls() {
+    // 显示触摸控制
+    document.getElementById('joystick').style.display = 'block';
+    document.getElementById('touchZoom').style.display = 'block';
+    
+    // 摇杆控制
+    const joystick = document.getElementById('joystick');
+    const joystickBase = joystick.querySelector('.touch-joystick-base');
+    const joystickHandle = joystick.querySelector('.touch-joystick-handle');
+    
+    joystick.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      isTouchJoystickActive = true;
+      const rect = joystick.getBoundingClientRect();
+      joystickStartPos = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      };
+      updateJoystick(e.touches[0]);
+    });
+    
+    document.addEventListener('touchmove', function(e) {
+      if (isTouchJoystickActive) {
+        e.preventDefault();
+        updateJoystick(e.touches[0]);
+      }
+    });
+    
+    document.addEventListener('touchend', function(e) {
+      if (isTouchJoystickActive) {
+        isTouchJoystickActive = false;
+        joystickCurrentPos = { x: 0, y: 0 };
+        joystickHandle.style.transform = 'translate(-50%, -50%)';
+        cakeRotationSpeed = { x: 0, y: 0 };
+      }
+    });
+    
+    function updateJoystick(touch) {
+      const deltaX = touch.clientX - joystickStartPos.x;
+      const deltaY = touch.clientY - joystickStartPos.y;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      const maxDistance = 50;
+      
+      if (distance > maxDistance) {
+        const angle = Math.atan2(deltaY, deltaX);
+        joystickCurrentPos.x = Math.cos(angle) * maxDistance;
+        joystickCurrentPos.y = Math.sin(angle) * maxDistance;
+      } else {
+        joystickCurrentPos.x = deltaX;
+        joystickCurrentPos.y = deltaY;
+      }
+      
+      joystickHandle.style.transform = `translate(calc(-50% + ${joystickCurrentPos.x}px), calc(-50% + ${joystickCurrentPos.y}px))`;
+      
+      cakeRotationSpeed = {
+        x: -joystickCurrentPos.y / maxDistance * 0.05,
+        y: -joystickCurrentPos.x / maxDistance * 0.05
+      };
+    }
+    
+    // 缩放按钮
+    document.getElementById('zoomIn').addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      camera.position.z -= 1;
+      camera.position.z = Math.max(5, Math.min(30, camera.position.z));
+    });
+    
+    document.getElementById('zoomOut').addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      camera.position.z += 1;
+      camera.position.z = Math.max(5, Math.min(30, camera.position.z));
+    });
+    
+    // 双指缩放
+    let initialDistance = 0;
+    let initialZoom = 15;
+    
+    document.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        initialDistance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+        initialZoom = camera.position.z;
+      }
+    });
+    
+    document.addEventListener('touchmove', function(e) {
+      if (e.touches.length === 2 && !isTouchJoystickActive) {
+        e.preventDefault();
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const currentDistance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+        
+        const scale = initialDistance / currentDistance;
+        camera.position.z = initialZoom * scale;
+        camera.position.z = Math.max(5, Math.min(30, camera.position.z));
+      }
+    });
+  }
+  
+  // 请求麦克风权限
+  function requestMicrophonePermission() {
+    if (micPermissionRequested) return;
+    micPermissionRequested = true;
+    
+    // 显示权限提示
+    document.getElementById('permissionPrompt').style.display = 'flex';
+    
+    // 允许按钮
+    document.getElementById('allowMic').addEventListener('click', function() {
+      document.getElementById('permissionPrompt').style.display = 'none';
+      startMicrophone();
+    });
+    
+    // 3秒后自动隐藏提示
+    setTimeout(() => {
+      document.getElementById('permissionPrompt').style.display = 'none';
+      // 即使不授权也尝试启动麦克风
+      setTimeout(startMicrophone, 1000);
+    }, 3000);
+  }
+  
+  // 开始麦克风
+  async function startMicrophone() {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        updateMicStatus("⚠️ 您的浏览器不支持麦克风功能");
+        return;
+      }
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: false
+        } 
+      });
+      
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser();
+      microphone = audioContext.createMediaStreamSource(stream);
+      microphone.connect(analyser);
+      
+      analyser.fftSize = 256;
+      const bufferLength = analyser.frequencyBinCount;
+      dataArray = new Uint8Array(bufferLength);
+      
+      isMicActive = true;
+      updateMicStatus("🎤 麦克风已就绪，请吹气");
+      
+      startAudioAnalysis();
+      
+    } catch (err) {
+      console.log('麦克风设置:', err.name);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        updateMicStatus("🎤 点击屏幕任意位置后吹气");
+        setupTapToEnableMic();
+      } else {
+        updateMicStatus("🎂 可触摸旋转蛋糕观看");
+      }
+    }
+  }
+  
+  // 设置点击启用麦克风
+  function setupTapToEnableMic() {
+    let tapCount = 0;
+    const tapHandler = function() {
+      tapCount++;
+      if (tapCount === 1) {
+        updateMicStatus("🎤 再点一次启用麦克风");
+        setTimeout(() => {
+          if (tapCount === 1) {
+            updateMicStatus("🎤 点击屏幕任意位置后吹气");
+            tapCount = 0;
+          }
+        }, 2000);
+      } else if (tapCount === 2) {
+        startMicrophone();
+        document.removeEventListener('click', tapHandler);
+        document.removeEventListener('touchstart', tapHandler);
+      }
+    };
+    
+    document.addEventListener('click', tapHandler);
+    document.addEventListener('touchstart', tapHandler);
+  }
+  
+  // 更新麦克风状态
+  function updateMicStatus(text) {
+    const micStatus = document.getElementById('micStatus');
+    micStatus.textContent = text;
+    
+    micStatus.classList.remove('auto-hide');
+    void micStatus.offsetWidth;
+    micStatus.classList.add('auto-hide');
+  }
+  
+  // 开始音频分析
+  function startAudioAnalysis() {
+    if (!isMicActive) return;
+    
+    function analyzeAudio() {
+      if (!analyser || !dataArray) return;
+      
+      analyser.getByteFrequencyData(dataArray);
+      
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        sum += dataArray[i];
+      }
+      const average = sum / dataArray.length;
+      
+      let lowFreqSum = 0;
+      const lowFreqCount = Math.floor(dataArray.length * 0.3);
+      for (let i = 0; i < lowFreqCount; i++) {
+        lowFreqSum += dataArray[i];
+      }
+      const lowFreqAverage = lowFreqSum / lowFreqCount;
+      
+      const currentTime = Date.now();
+      const timeSinceLastBlow = currentTime - lastBlowTime;
+      
+      if (lowFreqAverage > 50 && average > 20 && timeSinceLastBlow > 2000) {
+        blowIntensity += 0.3;
+        
+        if (blowIntensity > 0.5) {
+          document.getElementById('micStatus').textContent = "💨 检测到吹气！继续吹...";
+          document.getElementById('micStatus').classList.add('blowing');
+          
+          // 吹气时火焰抖动
+          flames.forEach(candle => {
+            if (candle.lit) {
+              const intensity = Math.min(1, blowIntensity);
+              candle.flameGroup.position.x = (Math.random() - 0.5) * 0.1 * intensity;
+              candle.flameGroup.position.z = (Math.random() - 0.5) * 0.1 * intensity;
+            }
+          });
+        }
+        
+        if (blowIntensity > 1.5) {
+          blowIntensity = 0;
+          lastBlowTime = currentTime;
+          blowOutCandles();
+          
+          document.getElementById('micStatus').textContent = "🎂 生日快乐！";
+          document.getElementById('micStatus').classList.remove('blowing');
+          
+          setTimeout(() => {
+            if (isMicActive) {
+              document.getElementById('micStatus').textContent = "🎤 麦克风已就绪";
+            }
+          }, 3000);
+        }
+      } else {
+        blowIntensity = Math.max(0, blowIntensity - 0.1);
+        if (timeSinceLastBlow > 1000 && isMicActive && !document.getElementById('micStatus').classList.contains('blowing')) {
+          document.getElementById('micStatus').classList.remove('blowing');
+        }
+      }
+      
+      requestAnimationFrame(analyzeAudio);
+    }
+    
+    analyzeAudio();
+  }
+  
+  // 吹灭蜡烛
+  function blowOutCandles() {
+    let allLit = true;
+    
+    flames.forEach(function(candle) {
+      if (candle.lit) {
+        candle.lit = false;
+        candle.flameGroup.visible = false;
+        candle.light.visible = false;
+        candle.flickerLight.visible = false;
+        allLit = false;
+        
+        // 创建吹灭时的烟雾
+        for (let i = 0; i < 5; i++) {
+          const x = candle.flameGroup.position.x + candle.flameGroup.parent.position.x;
+          const y = candle.flameGroup.position.y + candle.flameGroup.parent.position.y;
+          const z = candle.flameGroup.position.z + candle.flameGroup.parent.position.z;
+          createSmokeParticle(x, y, z);
+        }
+      }
+    });
+    
+    if (!allLit) {
+      showBirthdayMessage();
+      startConfetti();
+      
+      birthdayTextMeshes.forEach(mesh => {
+        if (mesh.material.emissiveIntensity) {
+          mesh.material.emissiveIntensity = 0.8;
+        }
+      });
+      
+      playBlowSound();
+    }
+  }
+  
+// 播放吹蜡烛声音 - 使用预录音效
+function playBlowSound() {
+  try {
+    const blowSound = document.getElementById('blowSound');
+    if (blowSound) {
+      blowSound.currentTime = 0; // 重置播放位置
+      blowSound.volume = 0.7; // 设置音量
+      blowSound.play().catch(e => {
+        console.log('音效播放失败:', e);
+        // 如果预录音效失败，使用备用合成音效
+        playSyntheticBlowSound();
+      });
+    } else {
+      // 如果找不到音频元素，使用备用合成音效
+      playSyntheticBlowSound();
+    }
+  } catch (err) {
+    console.log('音效播放失败:', err);
+    // 出错时使用备用合成音效
+    playSyntheticBlowSound();
+  }
+}
+
+// 备用合成音效（当预录音效不可用时使用）
+function playSyntheticBlowSound() {
+  if (!audioContext) return;
+  
+  try {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(120, audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(60, audioContext.currentTime + 0.4);
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.5);
+  } catch (err) {
+    console.log('合成音效也失败了:', err);
+  }
+}
+  
+  // 重新点燃蜡烛
+  function relightCandles() {
+    flames.forEach(function(candle) {
+      candle.lit = true;
+      candle.flameGroup.visible = true;
+      candle.light.visible = true;
+      candle.flickerLight.visible = true;
+      
+      // 重置火焰位置
+      candle.flameGroup.position.set(0, 0, 0);
+    });
+    
+    document.getElementById("birthdayMessage").style.opacity = 0;
+    
+    birthdayTextMeshes.forEach(mesh => {
+      if (mesh.material.emissiveIntensity) {
+        mesh.material.emissiveIntensity = 0.2;
+      }
+    });
+    
+    if (isMicActive) {
+      document.getElementById('micStatus').textContent = "🎤 麦克风已就绪";
+    }
+  }
+  
+  // 显示生日消息
+  function showBirthdayMessage() {
+    const message = document.getElementById("birthdayMessage");
+    message.textContent = "🎂 杨思蕊，生日快乐！ 🎂";
+    message.style.opacity = 1;
+    
+    setTimeout(function() {
+      message.style.opacity = 0;
+    }, 5000);
+  }
+  
+  // 开始五彩纸屑效果
+  function startConfetti() {
+    if (confettiActive) return;
+    
+    confettiActive = true;
+    const colors = ['#ff4444', '#44ff44', '#4444ff', '#ffff44', '#ff44ff', '#44ffff'];
+    
+    for (let i = 0; i < 100; i++) {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.left = Math.random() * 100 + '%';
+      confetti.style.top = '-20px';
+      confetti.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+      
+      const size = Math.random() * 10 + 5;
+      confetti.style.width = size + 'px';
+      confetti.style.height = size + 'px';
+      
+      const animation = confetti.animate([
+        { 
+          transform: 'translate(0, 0) rotate(0deg)',
+          opacity: 1 
+        },
+        { 
+          transform: 'translate(' + (Math.random() * 200 - 100) + 'px, 100vh) rotate(' + (Math.random() * 720) + 'deg)',
+          opacity: 0 
+        }
+      ], {
+        duration: Math.random() * 3000 + 2000,
+        easing: 'cubic-bezier(0.215, 0.610, 0.355, 1)'
+      });
+      
+      document.body.appendChild(confetti);
+      confettiParticles.push({ element: confetti, animation: animation });
+      
+      animation.onfinish = function() {
+        confetti.remove();
+      };
+    }
+    
+    setTimeout(function() {
+      stopConfetti();
+    }, 3000);
+  }
+  
+  // 停止五彩纸屑
+  function stopConfetti() {
+    confettiActive = false;
+    confettiParticles.forEach(function(particle) {
+      if (particle.animation.playState !== 'finished') {
+        particle.animation.finish();
+      }
+    });
+    confettiParticles = [];
+  }
+  
+  // 更新火焰
+  function updateFlames(deltaTime) {
+    flames.forEach(candle => {
+      if (candle.lit) {
+        const time = Date.now() * 0.001 + candle.timeOffset;
+        
+        // 火焰动画
+        const flickerX = Math.sin(time * 15) * 0.05;
+        const flickerY = Math.sin(time * 12 + 1) * 0.05;
+        const flickerZ = Math.cos(time * 13 + 2) * 0.05;
+        
+        candle.flameGroup.position.set(flickerX, flickerY, flickerZ);
+        
+        // 火焰缩放动画
+        const baseScale = 0.8 + Math.sin(time * 8) * 0.2;
+        const innerScale = 0.7 + Math.sin(time * 10 + 1) * 0.3;
+        
+        candle.flame.scale.set(baseScale, baseScale, 1);
+        candle.innerFlame.scale.set(innerScale, innerScale, 1);
+        
+        // 火焰旋转动画
+        candle.flame.rotation.z = Math.sin(time * 5) * 0.2;
+        candle.innerFlame.rotation.z = Math.cos(time * 6) * 0.3;
+        
+        // 火焰纹理动画
+        const frame = Math.floor(time * 10) % flameTextures.length;
+        if (frame !== candle.flameIndex) {
+          candle.flame.material.map = flameTextures[frame];
+          candle.flame.material.needsUpdate = true;
+          candle.innerFlame.material.map = flameTextures[(frame + 1) % flameTextures.length];
+          candle.innerFlame.material.needsUpdate = true;
+          candle.flameIndex = frame;
+        }
+        
+        // 烛光强度动画
+        const lightIntensity = 1.2 + Math.sin(time * 8) * 0.3;
+        const flickerIntensity = 0.6 + Math.sin(time * 12 + 2) * 0.4;
+        
+        candle.light.intensity = lightIntensity;
+        candle.flickerLight.intensity = flickerIntensity;
+        
+        // 烟雾粒子
+        candle.smokeTime += deltaTime;
+        if (candle.smokeTime > 0.5 && Math.random() > 0.7) {
+          const x = candle.flameGroup.position.x + candle.flameGroup.parent.position.x;
+          const y = candle.flameGroup.position.y + candle.flameGroup.parent.position.y + 0.2;
+          const z = candle.flameGroup.position.z + candle.flameGroup.parent.position.z;
+          createSmokeParticle(x, y, z);
+          candle.smokeTime = 0;
+        }
+      }
+    });
+    
+    // 更新烟雾粒子
+    for (let i = smokeParticles.length - 1; i >= 0; i--) {
+      const smoke = smokeParticles[i];
+      const data = smoke.userData;
+      
+      data.life -= deltaTime * 0.5;
+      smoke.position.x += data.velocity.x;
+      smoke.position.y += data.velocity.y;
+      smoke.position.z += data.velocity.z;
+      smoke.scale.setScalar(data.scale * (1 + deltaTime * 2));
+      smoke.material.opacity = data.life * 0.4;
+      
+      // 随机旋转
+      smoke.rotation.x += deltaTime * 0.5;
+      smoke.rotation.y += deltaTime * 0.3;
+      
+      if (data.life <= 0) {
+        scene.remove(smoke);
+        smokeParticles.splice(i, 1);
+      }
+    }
+  }
+  
+  // 动画循环
+  function animate() {
+    requestAnimationFrame(animate);
+    
+    const deltaTime = clock.getDelta();
+    const time = Date.now() * 0.001;
+    
+    // 移动端摇杆控制旋转
+    if (isMobile && isTouchJoystickActive) {
+      cakeGroup.rotation.x += cakeRotationSpeed.x;
+      cakeGroup.rotation.y += cakeRotationSpeed.y;
+      cakeGroup.rotation.x = Math.max(-Math.PI/3, Math.min(Math.PI/3, cakeGroup.rotation.x));
+    }
+    
+    // 更新火焰
+    updateFlames(deltaTime);
+    
+    // 文字发光动画
+    birthdayTextMeshes.forEach(mesh => {
+      if (mesh.material.emissiveIntensity) {
+        const pulse = 0.1 + Math.sin(time * 2 + mesh.position.x) * 0.1;
+        mesh.material.emissiveIntensity = Math.max(0.1, mesh.material.emissiveIntensity + pulse * 0.01);
+        
+        // 轻微浮动效果
+        mesh.position.y += Math.sin(time + mesh.position.x) * 0.001;
+      }
+    });
+    
+    // 糖珠轻微旋转
+    cakeGroup.children.forEach(child => {
+      if (child.geometry && child.geometry.type === 'SphereGeometry') {
+        child.rotation.y += deltaTime * 0.5;
+      }
+    });
+    
+    // 轻微自动旋转
+    if (!isTouchJoystickActive) {
+      cakeGroup.rotation.y += deltaTime * 0.1;
+    }
+    
+    renderer.render(scene, camera);
+  }
+  
+  // 检查并启动
+  if (typeof THREE !== 'undefined') {
+    setTimeout(init, 100);
+  } else {
+    document.getElementById('loading').textContent = '加载失败，请刷新页面';
+  }
+});
+</script>
+
+</body>
+</html>
